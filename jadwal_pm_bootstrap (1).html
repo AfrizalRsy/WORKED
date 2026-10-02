@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jadwal Preventive Maintenance Petrokimia</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  :root{
+    --panel-900:#0B2436;
+    --panel-700:#123349;
+    --brand:#0E7490;
+    --brand-ink:#ffffff;
+    --amber:#D97B29;
+    --amber-soft:#FBEADB;
+    --ok:#2F8F5B;
+    --ok-soft:#E3F3EA;
+    --bg:#F4F6F8;
+    --surface:#FFFFFF;
+    --ink:#15202B;
+    --muted:#5B6B7A;
+    --line:#B0B0B0;
+    --red-ink:#B71C1C;
+    --red-soft:#FFCDD2;
+    --red-cell:#FFE2E4;
+    --red-cell-on:#FFADB3;
+    --daynum-bg:#FFF8E8;
+    --daynum-border:#f0d4ab;
+    --focus-bg:#EAF6F9;
+  }
+  [data-theme="dark"]{
+    --panel-900:#0D1B28;
+    --panel-700:#15283A;
+    --brand:#22A6C9;
+    --brand-ink:#06151c;
+    --amber:#F0A050;
+    --amber-soft:#4A2E12;
+    --ok:#4CC484;
+    --ok-soft:#163626;
+    --bg:#161B22;
+    --surface:#1E242C;
+    --ink:#DCE2E8;
+    --muted:#8B98A5;
+    --line:#4A5560;
+    --red-ink:#FF5252;
+    --red-soft:#6B2024;
+    --red-cell:#5A1F22;
+    --red-cell-on:#8A2A30;
+    --daynum-bg:#2A2210;
+    --daynum-border:#4a3a1c;
+    --focus-bg:#0F2A33;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --panel-900:#0D1B28; --panel-700:#15283A; --brand:#22A6C9; --brand-ink:#06151c;
+      --amber:#F0A050; --amber-soft:#4A2E12; --ok:#4CC484; --ok-soft:#163626;
+      --bg:#161B22; --surface:#1E242C; --ink:#DCE2E8; --muted:#8B98A5; --line:#4A5560;
+      --red-ink:#FF5252; --red-soft:#6B2024; --red-cell:#5A1F22; --red-cell-on:#8A2A30;
+      --daynum-bg:#2A2210; --daynum-border:#4a3a1c; --focus-bg:#0F2A33;
+    }
+  }
+  .theme-toggle{
+    position:fixed; top:15px; right:400px; z-index:1050;
+    width:40px; height:40px; border-radius:50%; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.12); font-size:1.1rem;
+  }
+  .theme-toggle:hover{ filter:brightness(0.95); }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+  }
+  h1,h2,h3,.brandfont{ font-family:'Space Grotesk',system-ui,sans-serif; }
+
+  .login-wrap{ min-height:100vh; display:flex; }
+  .login-side{
+    flex:1 1 42%; background:
+      radial-gradient(60% 90% at 15% 10%, #124a63 0%, transparent 60%),
+      linear-gradient(165deg, var(--panel-900), #081722 70%);
+    color:#dce8ee; display:flex; flex-direction:column; justify-content:center;
+    padding:4rem 3rem; position:relative; overflow:hidden;
+  }
+  .login-side .gauge{
+    width:92px; height:92px; border-radius:50%; border:3px solid #2a5770;
+    display:flex; align-items:center; justify-content:center; font-size:2.2rem;
+    color:var(--amber); margin-bottom:1.75rem; background:#0f2e40;
+  }
+  .login-side h1{ font-size:1.9rem; font-weight:700; color:#fff; margin-bottom:.6rem; }
+  .login-side p{ color:#9fb4c0; max-width:360px; line-height:1.55; }
+  .login-form-side{ flex:1 1 58%; display:flex; align-items:center; justify-content:center; padding:2rem; }
+  .login-card{ width:100%; max-width:380px; }
+  .login-card .form-label{ font-weight:600; font-size:.82rem; color:var(--muted); }
+  .form-control:focus{ border-color:var(--brand); box-shadow:0 0 0 .2rem rgba(14,116,148,.15); }
+  .btn-brand{ background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600; }
+  .btn-brand:hover{ filter:brightness(0.88); color:#fff; }
+  .btn-ghost-brand{ background:transparent; border:1.5px solid var(--brand); color:var(--brand); font-weight:600; }
+  .btn-ghost-brand:hover{ background:rgba(14,116,148,.08); color:var(--brand); }
+
+  .topbar{ background:var(--panel-900); color:#e7eef2; position:sticky; top:0; z-index:1040; }
+  .topbar .brandfont{ font-weight:700; letter-spacing:.2px; }
+  .pill{ font-size:.72rem; font-weight:700; padding:.3rem .75rem; border-radius:999px; }
+  .pill-admin{ background:var(--ok-soft); color:var(--ok); }
+  .pill-view{ background:var(--amber-soft); color:var(--amber); }
+
+  .toolbar-card{ background:var(--surface); border:1px solid var(--line); border-radius:10px; }
+  .btn-outline-panel{ border:1.5px solid var(--line); color:var(--ink); font-weight:600; background:var(--surface); }
+  .form-select, .form-control{ background-color:var(--surface) !important; color:var(--ink) !important; border-color:var(--line) !important; }
+  .form-select:disabled, .form-control:disabled{ opacity:.6; }
+  ::placeholder{ color:var(--muted) !important; opacity:1; }
+  .btn-outline-panel:hover{ filter:brightness(0.95); }
+
+  .table-wrap{ background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:auto; }
+  table thead th{
+    background:var(--surface) !important; color:var(--ink) !important; font-size:.78rem; font-weight:700; letter-spacing:.2px;
+    position:sticky; top:0; z-index:2; border-bottom:2px solid var(--line) !important; white-space:nowrap;
+  }
+  #headGroupRow th{ top:0; }
+  #headRow th.day-num-th{ position:sticky; top:33px; z-index:1; }
+  table td{ font-size:.84rem; vertical-align:middle; border-bottom:1.5px solid var(--line); border-right:1.5px solid var(--line); }
+  table th{ border-right:1.5px solid var(--line); }
+
+  /* Freeze kolom No & Equipment (sama seperti Freeze Panes di Excel) */
+  .frz-col{ position:sticky; z-index:4; background:var(--surface) !important; border-right:1.5px solid var(--line) !important; }
+  .frz-col input.cell{ background:transparent !important; }
+  thead .frz-col{ z-index:6; background:var(--surface) !important; color:var(--ink) !important; }
+  .table-hover > tbody > tr:hover .frz-col,
+  .table-hover > tbody > tr:hover > .frz-col{ background:var(--surface) !important; }
+  input.cell{ border:none; background:transparent; font-size:.84rem; padding:3px 5px; border-radius:6px; color:var(--ink); min-width:100%; }
+  table{ table-layout:auto; }
+  th, td{ white-space:nowrap; }
+  input.cell:focus{ outline:none; box-shadow:0 0 0 2px rgba(14,116,148,.25); background:var(--focus-bg); }
+  input.cell[readonly]:focus{ background:transparent !important; box-shadow:none !important; }
+  .mo-cell{ text-align:center; cursor:pointer; user-select:none; width:36px; color:#c7d2d8; }
+  .mo-cell.mo-on{ background:var(--amber-soft); color:var(--amber); font-weight:800; }
+  .mo-cell:hover{ filter:brightness(0.97); }
+
+  .day-group-th{
+    background:var(--amber); color:#fff; font-weight:700; letter-spacing:.5px;
+    text-align:center; font-size:.78rem; padding:.45rem 0; border-right:none !important;
+  }
+  .day-num-th{
+    background:var(--daynum-bg); color:var(--amber); font-weight:700;
+    border-right:1px dashed var(--daynum-border) !important; border-bottom:2px solid var(--amber) !important;
+  }
+  .day-num-th.is-red{
+    background:var(--red-soft) !important; color:var(--red-ink) !important; font-weight:800;
+    border-bottom:3px solid var(--red-ink) !important;
+  }
+  td.mo-cell.day-mode.is-red-col{ background:var(--red-cell); border-right-color:var(--line) !important; border-bottom-color:var(--line) !important; }
+  td.mo-cell.day-mode.is-red-col.mo-on{ background:var(--red-cell-on); color:var(--red-ink); font-weight:800; }
+  .holiday-chip{
+    display:inline-flex; align-items:center; gap:6px; background:var(--red-soft); color:var(--red-ink);
+    border-radius:999px; padding:.25rem .65rem; font-size:.76rem; font-weight:600;
+  }
+  .holiday-chip button{ background:none; border:none; color:var(--red-ink); cursor:pointer; font-weight:700; line-height:1; padding:0; }
+  td.mo-cell.day-mode{
+    border-right:1px dashed #ece3d2 !important;
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 100%);
+  }
+  td.mo-cell.day-mode.mo-on{ background:var(--amber-soft); }
+  .btn-del{ background:none; border:none; color:#c0392b; font-weight:700; cursor:pointer; }
+
+  .hidden{ display:none !important; }
+  .status-line{ font-size:.78rem; color:var(--muted); min-height:1.1em; }
+</style>
+</head>
+<body>
+
+<button id="themeToggle" class="theme-toggle hidden" title="Ganti mode terang/gelap"><i class="bi bi-moon-stars"></i></button>
+
+<div id="loginScreen" class="login-wrap">
+  <div class="login-side">
+    <div class="gauge"><i class="bi bi-speedometer2"></i></div>
+    <h1>Jadwal Preventive<br>Maintenance Petrokimia</h1>
+    <p>Satu tempat untuk menjadwalkan, memantau, dan melacak aktivitas pemeliharaan preventif seluruh equipment sepanjang tahun.</p>
+  </div>
+  <div class="login-form-side">
+    <div class="login-card">
+      <h2 class="h4 mb-1">Masuk</h2>
+      <p class="text-secondary mb-4" style="font-size:.9rem;">Gunakan email kamu untuk melanjutkan.</p>
+      <div class="mb-3">
+        <label class="form-label">User</label>
+        <input id="authEmail" type="email" class="form-control" placeholder="nama@gmail.com">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input id="authPassword" type="password" class="form-control" placeholder="Minimal 6 karakter">
+      </div>
+      <div class="d-grid gap-2 mt-4">
+        <button id="btnLogin" class="btn btn-brand py-2"><i class="bi bi-box-arrow-in-right me-1"></i> Masuk</button>
+        <button id="btnSignup" class="btn btn-ghost-brand py-2">Daftar Akun Baru</button>
+      </div>
+      <p id="authMsg" class="mt-3 mb-0" style="font-size:.82rem; color:#dc3545; min-height:1.2em;"></p>
+    </div>
+  </div>
+</div>
+
+<div id="appScreen" class="hidden">
+
+  <nav id="topbar" class="topbar px-3 px-md-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-speedometer2 fs-4" style="color:var(--amber);"></i>
+      <span class="brandfont fs-5">Jadwal Preventive Maintenance Petrokimia</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span id="roleBadge" class="pill">...</span>
+      <span id="emailLabel" class="small" style="color:#9fb4c0;"></span>
+      <button id="btnLogout" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-box-arrow-right"></i> Keluar
+      </button>
+    </div>
+  </nav>
+
+  <div class="p-3 p-md-4" style="max-width:1440px; margin:0 auto;">
+
+    <div id="stickyHeaderZone">
+    <div class="toolbar-card p-3 mb-3">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2 pb-2" style="border-bottom:1px solid var(--line);">
+        <i class="bi bi-funnel text-secondary"></i>
+        <label class="small fw-semibold text-secondary mb-0">Tahun</label>
+        <select id="yearSelect" class="form-select form-select-sm" style="width:auto;"></select>
+
+        <label class="small fw-semibold text-secondary mb-0 ms-2">Plant</label>
+        <select id="plantSelect" class="form-select form-select-sm" style="width:auto;"></select>
+
+        <label class="small fw-semibold text-secondary mb-0 ms-2">Section</label>
+        <select id="sectionSelect" class="form-select form-select-sm" style="width:auto;"></select>
+
+        <label class="small fw-semibold text-secondary mb-0 ms-2">Bulan</label>
+        <select id="bulanSelect" class="form-select form-select-sm" style="width:auto;"></select>
+
+        <div id="newYearBox" class="d-flex align-items-center gap-1 ms-2">
+          <input id="newYearInput" type="number" placeholder="Tahun baru" class="form-control form-control-sm" style="width:110px;">
+          <button id="btnAddYear" class="btn btn-sm btn-outline-panel"><i class="bi bi-plus-lg"></i> Tahun</button>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <button id="btnAddRow" class="btn btn-sm btn-brand"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+        <label id="btnUploadLabel" class="btn btn-sm btn-outline-panel mb-0">
+          <i class="bi bi-upload"></i> Upload Excel
+          <input id="fileUpload" type="file" accept=".xlsx,.xls" class="hidden">
+        </label>
+        <button id="btnTemplate" class="btn btn-sm btn-outline-panel"><i class="bi bi-file-earmark-spreadsheet"></i> Template</button>
+
+        <div id="holidayInputs" class="hidden d-flex flex-wrap align-items-center gap-2">
+          <input id="holidayDate" type="date" class="form-control form-control-sm" style="width:auto;">
+          <input id="holidayLabel" type="text" class="form-control form-control-sm" placeholder="Keterangan (misal: Maulid Nabi)" style="width:200px;">
+          <button id="btnAddHoliday" class="btn btn-sm btn-brand"><i class="bi bi-plus-lg"></i> Tambah</button>
+        </div>
+
+        <div class="flex-grow-1"></div>
+        <button id="btnExportXlsx" class="btn btn-sm btn-outline-panel"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+        <button id="btnExportPdf" class="btn btn-sm btn-outline-panel"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+      </div>
+
+      <div id="holidayListWrap" class="hidden mt-2">
+        <div id="holidayList" class="d-flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+
+    <p id="statusLine" class="status-line mb-2"></p>
+
+    <div id="confirmBanner" class="hidden alert d-flex flex-wrap align-items-center gap-3 mb-3"
+         style="background:var(--amber-soft); border:1px solid var(--amber); color:#7a4414;">
+      <span id="confirmMsg" class="flex-grow-1 small fw-medium"></span>
+      <button id="confirmYes" class="btn btn-sm btn-brand">Ya, Timpa</button>
+      <button id="confirmNo" class="btn btn-sm btn-outline-panel">Batal</button>
+    </div>
+    </div>
+
+    <div class="table-wrap" style="max-height:70vh;">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr id="headGroupRow"></tr>
+          <tr id="headRow"></tr>
+        </thead>
+        <tbody id="bodyRows"></tbody>
+      </table>
+      <div id="emptyState" class="hidden p-5 text-center small text-secondary"></div>
+    </div>
+
+    <p class="small text-secondary mt-3">
+      Role <b>Admin</b> bisa tambah/ubah/hapus data. Role <b>User</b> cuma bisa lihat & download.
+      Pengaturan role ada di tabel <code>profiles</code> pada dashboard Supabase.
+    </p>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://qeqnwwhhifefchccpzak.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_UX1EfKSL4v20m1oU9qX-Pg_UMQ0p8EJ";
+
+const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const MONTHS = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const COLS = ["no","functional_location","section","equipment","main_work_centre","eksekutor","plant","no_maintenance_plan","no_maintenance_item","desc_maintenance_plan_text","interval_cycle","abc_indicator"];
+const COL_LABELS = {
+  no:"No", functional_location:"Functional Location", section:"Section", equipment:"Equipment",
+  main_work_centre:"Main Work Centre", eksekutor:"Eksekutor", plant:"Plant",
+  no_maintenance_plan:"No Maintenance Plan", no_maintenance_item:"No Maintenance Item",
+  desc_maintenance_plan_text:"Desc Maintenance Plan Text", interval_cycle:"Interval / Cycle",
+  abc_indicator:"ABC Indicator",
+};
+const COL_WIDTHS = {
+  no:"40px", functional_location:"170px", section:"110px", equipment:"150px",
+  main_work_centre:"130px", eksekutor:"110px", plant:"90px",
+  no_maintenance_plan:"130px", no_maintenance_item:"120px",
+  desc_maintenance_plan_text:"200px", interval_cycle:"100px", abc_indicator:"90px",
+};
+
+// Simplified columns shown in the web table (full 12-field model is still used for
+// Excel template/upload/export). "eksekutor" here is a read-only combined display of
+// main_work_centre + eksekutor + plant, matching the requested web view.
+const DISPLAY_COLS = ["no","equipment","eksekutor","no_maintenance_plan","desc_maintenance_plan_text","interval_cycle"];
+const DISPLAY_LABELS = {
+  no:"No", equipment:"Equipment", eksekutor:"Eksekutor",
+  no_maintenance_plan:"No Maintenance Plan", desc_maintenance_plan_text:"Desc Maintenance Plan Text",
+  interval_cycle:"Interval / Cycle",
+};
+const DISPLAY_WIDTHS = { no:"40px", equipment:"150px", eksekutor:"190px", no_maintenance_plan:"130px", desc_maintenance_plan_text:"220px", interval_cycle:"100px" };
+const FREEZE_COLS = ["no","equipment"]; // kolom yang di-freeze (sticky) secara horizontal, seperti Freeze Panes
+
+function eksekutorDisplay(row){
+  const parts = [row.main_work_centre, row.eksekutor, row.plant].map(v=>(v||"").trim()).filter(Boolean);
+  if (parts.length === 0) return "";
+  // "B0105 - Mekanik Ammonia IA" style: work centre, dash, then eksekutor+plant together
+  const [wc, ...rest] = parts;
+  return rest.length ? `${wc} - ${rest.join(" ")}` : wc;
+}
+
+let isAdmin = false;
+let currentUser = null;
+let allRows = [];
+let allHolidays = []; // [{id, tanggal:"YYYY-MM-DD", label}]
+let selectedYear = new Date().getFullYear();
+let selectedPlant = "Semua";
+let selectedSection = "Semua";
+let selectedBulan = String(new Date().getMonth()); // default: bulan berjalan saat ini (0-11); bisa diganti ke "Semua" lewat dropdown
+
+const $ = (sel) => document.querySelector(sel);
+
+function truthyMonth(v){
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  if (v == null) return false;
+  const s = String(v).trim().toLowerCase();
+  return ["v","x","1","ya","yes","true","ok","✓","done"].includes(s);
+}
+function emptyRow(year, no){
+  const obj = { year, no };
+  COLS.forEach(c=>{ if (c!=="no") obj[c] = ""; });
+  obj.months = [false,false,false,false,false,false,false,false,false,false,false,false];
+  obj.scheduled_dates = [];
+  return obj;
+}
+function daysInMonth(year, monthIdx){ return new Date(Number(year), Number(monthIdx)+1, 0).getDate(); }
+function dateStr(year, monthIdx, day){
+  const mm = String(Number(monthIdx)+1).padStart(2,"0");
+  const dd = String(day).padStart(2,"0");
+  return `${year}-${mm}-${dd}`;
+}
+function getDates(row){
+  if (Array.isArray(row.scheduled_dates)) return row.scheduled_dates;
+  try{ return JSON.parse(row.scheduled_dates || "[]"); }catch(e){ return []; }
+}
+function monthHasAnyDate(row, year, monthIdx){
+  const prefix = `${year}-${String(Number(monthIdx)+1).padStart(2,"0")}`;
+  return getDates(row).some(d=>d.startsWith(prefix));
+}
+function isWeekend(year, monthIdx, day){
+  const dow = new Date(Number(year), Number(monthIdx), day).getDay();
+  return dow === 0 || dow === 6;
+}
+function isRedDate(year, monthIdx, day){
+  if (isWeekend(year, monthIdx, day)) return true;
+  const ds = dateStr(year, monthIdx, day);
+  return allHolidays.some(h=>h.tanggal===ds);
+}
+
+const MONTH_NAMES_FULL = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
+const DAY_ABBR = {0:"MG",1:"SN",2:"SL",3:"RB",4:"KM",5:"JM",6:"SB"}; // JS getDay(): 0=Sun..6=Sat
+
+// Every single day (all 7 days, no filtering) of the given year, month by month.
+function yearAllDaysColumns(year){
+  const cols = [];
+  for (let m=0; m<12; m++){
+    const nd = daysInMonth(year, m);
+    for (let d=1; d<=nd; d++){
+      const dow = new Date(Number(year), m, d).getDay();
+      cols.push({ month:m, date:d, dow });
+    }
+  }
+  return cols;
+}
+function setStatus(msg, isErr){
+  const el = $("#statusLine");
+  el.textContent = msg || "";
+  el.style.color = isErr ? "#dc3545" : "var(--muted)";
+}
+function downloadBlob(filename, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+/* ---------------- THEME (light/dark) ---------------- */
+function applyTheme(mode){
+  document.documentElement.setAttribute("data-theme", mode);
+  document.documentElement.setAttribute("data-bs-theme", mode); // sinkronkan dark mode bawaan Bootstrap juga
+  const icon = $("#themeToggle i");
+  icon.className = mode === "dark" ? "bi bi-sun" : "bi bi-moon-stars";
+}
+(function initTheme(){
+  let saved = null;
+  try{ saved = localStorage.getItem("pm_theme"); }catch(e){}
+  const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(saved || (systemDark ? "dark" : "light"));
+})();
+$("#themeToggle").addEventListener("click", ()=>{
+  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try{ localStorage.setItem("pm_theme", next); }catch(e){}
+});
+
+$("#btnLogin").addEventListener("click", async ()=>{
+  const email = $("#authEmail").value.trim();
+  const password = $("#authPassword").value;
+  $("#authMsg").textContent = "";
+  const { error } = await supa.auth.signInWithPassword({ email, password });
+  if (error) $("#authMsg").textContent = error.message;
+});
+$("#btnSignup").addEventListener("click", async ()=>{
+  const email = $("#authEmail").value.trim();
+  const password = $("#authPassword").value;
+  $("#authMsg").textContent = "";
+  if (password.length < 6){ $("#authMsg").textContent = "Password minimal 6 karakter."; return; }
+  const { error } = await supa.auth.signUp({ email, password });
+  if (error) $("#authMsg").textContent = error.message;
+  else { $("#authMsg").style.color = "#2F8F5B"; $("#authMsg").textContent = "Berhasil daftar! Cek email konfirmasi (jika diaktifkan), lalu klik Masuk."; }
+});
+$("#btnLogout").addEventListener("click", async ()=>{ await supa.auth.signOut(); });
+
+supa.auth.onAuthStateChange(async (event, session)=>{
+  if (session && session.user){
+    currentUser = session.user;
+    await enterApp();
+  } else {
+    currentUser = null;
+    $("#loginScreen").classList.remove("hidden");
+    $("#appScreen").classList.add("hidden");
+    $("#themeToggle").classList.add("hidden");
+  }
+});
+
+function syncFreezeOffsets(){
+  const headerCells = $("#headGroupRow").querySelectorAll(".frz-col");
+  if (!headerCells.length) return;
+  const offsets = [];
+  let cum = 0;
+  headerCells.forEach(th=>{ offsets.push(cum); cum += th.offsetWidth; });
+  headerCells.forEach((th,i)=>{ th.style.left = offsets[i] + "px"; });
+
+  document.querySelectorAll("#bodyRows tr").forEach(tr=>{
+    const cells = tr.querySelectorAll(".frz-col");
+    cells.forEach((td,i)=>{ td.style.left = (offsets[i] ?? 0) + "px"; });
+  });
+}
+
+function syncStickyOffsets(){
+  const navbarH = $("#topbar") ? $("#topbar").offsetHeight : 0;
+  const zone = $("#stickyHeaderZone");
+  if (zone) zone.style.top = navbarH + "px";
+}
+window.addEventListener("resize", ()=>{ syncStickyOffsets(); syncFreezeOffsets(); });
+
+async function enterApp(){
+  $("#loginScreen").classList.add("hidden");
+  $("#appScreen").classList.remove("hidden");
+  $("#themeToggle").classList.remove("hidden");
+  $("#emailLabel").textContent = currentUser.email;
+  requestAnimationFrame(syncStickyOffsets);
+
+  const { data: profile, error } = await supa.from("profiles").select("role").eq("id", currentUser.id).single();
+  isAdmin = !error && profile && profile.role === "admin";
+
+  const badge = $("#roleBadge");
+  if (isAdmin){ badge.textContent = "Admin (CRUD)"; badge.className = "pill pill-admin"; }
+  else { badge.textContent = "Lihat Saja"; badge.className = "pill pill-view"; }
+
+  $("#btnAddRow").classList.toggle("hidden", !isAdmin);
+  $("#btnUploadLabel").classList.toggle("hidden", !isAdmin);
+  $("#btnTemplate").classList.toggle("hidden", !isAdmin);
+  $("#newYearBox").classList.toggle("hidden", !isAdmin);
+
+  await loadHolidays();
+  await loadSchedule();
+}
+
+async function loadHolidays(){
+  const { data, error } = await supa.from("holidays").select("*").order("tanggal", { ascending:true });
+  if (!error) allHolidays = data || [];
+}
+
+function renderHolidayPanel(){
+  const showPanel = isAdmin && selectedBulan !== "Semua";
+  $("#holidayInputs").classList.toggle("hidden", !showPanel);
+  $("#holidayListWrap").classList.toggle("hidden", !showPanel);
+  if (!showPanel) return;
+
+  const monthIdx = Number(selectedBulan);
+  const prefix = `${selectedYear}-${String(monthIdx+1).padStart(2,"0")}`;
+  const list = allHolidays.filter(h=>h.tanggal.startsWith(prefix));
+
+  const listEl = $("#holidayList");
+  if (list.length === 0){
+    listEl.innerHTML = `<span class="small text-secondary">Belum ada hari libur ditandai untuk ${MONTHS[monthIdx]} ${selectedYear}.</span>`;
+    return;
+  }
+  listEl.innerHTML = list.map(h=>{
+    const day = Number(h.tanggal.split("-")[2]);
+    return `<span class="holiday-chip">${day} ${MONTHS[monthIdx]}${h.label?" — "+h.label:""} <button data-id="${h.id}" class="btn-del-holiday" title="Hapus">✕</button></span>`;
+  }).join("");
+  listEl.querySelectorAll(".btn-del-holiday").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const { error } = await supa.from("holidays").delete().eq("id", btn.dataset.id);
+      if (error){ setStatus("Gagal menghapus hari libur: " + error.message, true); return; }
+      await loadHolidays();
+      buildHeader(); renderRows();
+    });
+  });
+}
+
+$("#btnAddHoliday").addEventListener("click", async ()=>{
+  const dateVal = $("#holidayDate").value;
+  const label = $("#holidayLabel").value.trim();
+  if (!dateVal){ setStatus("Pilih tanggal dulu.", true); return; }
+  const { error } = await supa.from("holidays").upsert({ tanggal: dateVal, label }, { onConflict: "tanggal" });
+  if (error){ setStatus("Gagal menambah hari libur: " + error.message, true); return; }
+  $("#holidayDate").value = ""; $("#holidayLabel").value = "";
+  await loadHolidays();
+  buildHeader(); renderRows();
+});
+
+async function loadSchedule(){
+  const { data, error } = await supa.from("schedule").select("*").order("no", { ascending:true });
+  if (error){ setStatus("Gagal memuat data: " + error.message, true); return; }
+  allRows = data || [];
+  renderAll();
+}
+
+function refreshYearOptions(){
+  const years = Array.from(new Set(allRows.map(d=>Number(d.year)).filter(Boolean)));
+  if (!years.includes(selectedYear)) years.push(selectedYear);
+  years.sort((a,b)=>a-b);
+  const sel = $("#yearSelect");
+  sel.innerHTML = years.map(y=>`<option value="${y}">${y}</option>`).join("");
+  sel.value = String(selectedYear);
+}
+
+function refreshCategoryOptions(){
+  const plantVals = Array.from(new Set(allRows.map(d=>(d.plant||"").trim()).filter(Boolean))).sort();
+  const sectionVals = Array.from(new Set(allRows.map(d=>(d.section||"").trim()).filter(Boolean))).sort();
+
+  const pSel = $("#plantSelect");
+  pSel.innerHTML = `<option value="Semua">Semua Plant</option>` + plantVals.map(v=>`<option value="${v}">${v}</option>`).join("");
+  pSel.value = plantVals.includes(selectedPlant) ? selectedPlant : "Semua";
+  selectedPlant = pSel.value;
+
+  const sSel = $("#sectionSelect");
+  sSel.innerHTML = `<option value="Semua">Semua Section</option>` + sectionVals.map(v=>`<option value="${v}">${v}</option>`).join("");
+  sSel.value = sectionVals.includes(selectedSection) ? selectedSection : "Semua";
+  selectedSection = sSel.value;
+
+  const moSel = $("#bulanSelect");
+  if (!moSel.dataset.built){
+    moSel.innerHTML = `<option value="Semua">Semua Bulan</option>` + MONTHS.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
+    moSel.dataset.built = "1";
+    moSel.value = selectedBulan; // sinkronkan dropdown dengan default (bulan berjalan)
+  }
+}
+
+function activeMonthIndexes(){
+  return selectedBulan === "Semua" ? MONTHS.map((_,i)=>i) : [Number(selectedBulan)];
+}
+
+function buildHeader(){
+  const groupTr = $("#headGroupRow");
+  const tr = $("#headRow");
+  groupTr.innerHTML = ""; tr.innerHTML = "";
+
+  if (selectedBulan === "Semua"){
+    // single header row (no day-grouping needed) -> fixed cols span both rows, no group row content
+    DISPLAY_COLS.forEach(c=>{
+      const th = document.createElement("th");
+      th.textContent = DISPLAY_LABELS[c];
+      th.className = `px-2 py-2 ${c==="no"?"text-center":"text-start"}` + (FREEZE_COLS.includes(c) ? " frz-col" : "");
+      th.style.minWidth = DISPLAY_WIDTHS[c];
+      th.rowSpan = 2;
+      groupTr.appendChild(th);
+    });
+    MONTHS.forEach(m=>{
+      const th = document.createElement("th");
+      th.textContent = m; th.className = "px-1 py-2 text-center";
+      th.rowSpan = 2;
+      groupTr.appendChild(th);
+    });
+    if (isAdmin){
+      const th = document.createElement("th");
+      th.textContent = "Aksi"; th.className = "px-2 py-2 text-center"; th.rowSpan = 2;
+      groupTr.appendChild(th);
+    }
+  } else {
+    const monthIdx = Number(selectedBulan);
+    const nDays = daysInMonth(selectedYear, monthIdx);
+
+    DISPLAY_COLS.forEach(c=>{
+      const th = document.createElement("th");
+      th.textContent = DISPLAY_LABELS[c];
+      th.className = `px-2 py-2 ${c==="no"?"text-center":"text-start"}` + (FREEZE_COLS.includes(c) ? " frz-col" : "");
+      th.style.minWidth = DISPLAY_WIDTHS[c];
+      th.rowSpan = 2;
+      groupTr.appendChild(th);
+    });
+    const dayGroupTh = document.createElement("th");
+    dayGroupTh.textContent = `${MONTHS[monthIdx]} ${selectedYear}`;
+    dayGroupTh.className = "day-group-th";
+    dayGroupTh.colSpan = nDays;
+    groupTr.appendChild(dayGroupTh);
+    if (isAdmin){
+      const th = document.createElement("th");
+      th.textContent = "Aksi"; th.className = "px-2 py-2 text-center"; th.rowSpan = 2;
+      groupTr.appendChild(th);
+    }
+
+    for (let d=1; d<=nDays; d++){
+      const th = document.createElement("th");
+      th.textContent = String(d);
+      th.className = "px-1 py-2 text-center day-num-th" + (isRedDate(selectedYear, monthIdx, d) ? " is-red" : "");
+      th.style.minWidth = "34px";
+      tr.appendChild(th);
+    }
+  }
+
+  renderHolidayPanel();
+}
+function fieldInput(row, field, width){
+  if (field === "eksekutor"){
+    // Combined display (Main Work Centre + Eksekutor + Plant) — detail fields are
+    // edited via Excel upload, not inline, since this one cell maps to 3 columns.
+    const val = eksekutorDisplay(row).replace(/"/g,"&quot;");
+    const sz = Math.max(val.length, 3);
+    return `<input class="cell" readonly size="${sz}" title="Edit lewat Upload Excel (gabungan Main Work Centre + Eksekutor + Plant)" value="${val}">`;
+  }
+  const val = (row[field] ?? "").toString().replace(/"/g,"&quot;");
+  const ro = isAdmin ? "" : "readonly";
+  const minSz = field === "no" ? 2 : 3;
+  const sz = Math.max(val.length, minSz);
+  const centerCls = field === "no" ? ' style="text-align:center"' : "";
+  return `<input class="cell" ${ro} size="${sz}" data-id="${row.id}" data-field="${field}" value="${val}"${centerCls}>`;
+}
+function renderRows(){
+  const tbody = $("#bodyRows");
+  let rows = allRows.filter(d=>Number(d.year)===Number(selectedYear));
+  if (selectedPlant !== "Semua") rows = rows.filter(d=>(d.plant||"")===selectedPlant);
+  if (selectedSection !== "Semua") rows = rows.filter(d=>(d.section||"")===selectedSection);
+  rows = rows.sort((a,b)=>(Number(a.no)||0)-(Number(b.no)||0));
+
+  $("#emptyState").classList.toggle("hidden", rows.length>0);
+  if (rows.length===0){
+    $("#emptyState").innerHTML = isAdmin
+      ? '<i class="bi bi-inbox fs-3 d-block mb-2"></i>Tidak ada data yang cocok dengan filter ini.<br>Klik "Tambah Baris" atau "Upload Excel".'
+      : '<i class="bi bi-inbox fs-3 d-block mb-2"></i>Tidak ada data yang cocok dengan filter ini.';
+  }
+
+  tbody.innerHTML = rows.map(row=>{
+    let moCells;
+    if (selectedBulan === "Semua"){
+      const months = Array.isArray(row.months) ? row.months : JSON.parse(row.months || "[]");
+      const full = months.length ? months : Array(12).fill(false);
+      moCells = MONTHS.map((_,idx)=>{
+        const on = full[idx];
+        return `<td class="mo-cell ${on?'mo-on':''}" data-id="${row.id}" data-month="${idx}">${on?'<i class="bi bi-check-lg"></i>':""}</td>`;
+      }).join("");
+    } else {
+      const monthIdx = Number(selectedBulan);
+      const nDays = daysInMonth(selectedYear, monthIdx);
+      const dates = getDates(row);
+      const cells = [];
+      for (let d=1; d<=nDays; d++){
+        const ds = dateStr(selectedYear, monthIdx, d);
+        const on = dates.includes(ds);
+        const red = isRedDate(selectedYear, monthIdx, d) ? " is-red-col" : "";
+        cells.push(`<td class="mo-cell day-mode${red} ${on?'mo-on':''}" data-id="${row.id}" data-date="${ds}" data-monthidx="${monthIdx}">${on?'<i class="bi bi-check-lg"></i>':""}</td>`);
+      }
+      moCells = cells.join("");
+    }
+    const actionCell = isAdmin
+      ? `<td class="text-center"><button class="btn-del" data-id="${row.id}" title="Hapus baris"><i class="bi bi-trash3"></i></button></td>`
+      : "";
+    const fieldCells = DISPLAY_COLS.map(c=>{
+      const w = c==="no" ? "36px" : undefined;
+      const frz = FREEZE_COLS.includes(c) ? " frz-col" : "";
+      return `<td class="px-1${frz}">${fieldInput(row,c,w)}</td>`;
+    }).join("");
+    return `<tr>${fieldCells}${moCells}${actionCell}</tr>`;
+  }).join("");
+
+  if (isAdmin){
+    tbody.querySelectorAll("input.cell").forEach(inp=>inp.addEventListener("change", onFieldChange));
+    if (selectedBulan === "Semua"){
+      tbody.querySelectorAll(".mo-cell").forEach(td=>td.addEventListener("click", onMonthToggle));
+    } else {
+      tbody.querySelectorAll(".mo-cell").forEach(td=>td.addEventListener("click", onDayToggle));
+    }
+    tbody.querySelectorAll(".btn-del").forEach(btn=>btn.addEventListener("click", onDeleteRow));
+  }
+}
+function renderAll(){
+  refreshYearOptions(); refreshCategoryOptions(); buildHeader(); renderRows();
+  requestAnimationFrame(()=>{ syncStickyOffsets(); syncFreezeOffsets(); });
+}
+
+async function onFieldChange(e){
+  const id = e.target.dataset.id;
+  const field = e.target.dataset.field;
+  let value = e.target.value;
+  if (field === "no") value = Number(value) || 0;
+  const { error } = await supa.from("schedule").update({ [field]: value, updated_at: new Date().toISOString() }).eq("id", id);
+  if (error) setStatus("Gagal menyimpan: " + error.message, true);
+  else await loadSchedule();
+}
+async function onMonthToggle(e){
+  if (!isAdmin) return;
+  const id = e.currentTarget.dataset.id;
+  const idx = Number(e.currentTarget.dataset.month);
+  const row = allRows.find(d=>d.id===id);
+  if (!row) return;
+  const months = Array.isArray(row.months) ? [...row.months] : JSON.parse(row.months || "[]");
+  months[idx] = !months[idx];
+  const { error } = await supa.from("schedule").update({ months, updated_at: new Date().toISOString() }).eq("id", id);
+  if (error) setStatus("Gagal menyimpan: " + error.message, true);
+  else await loadSchedule();
+}
+async function onDayToggle(e){
+  if (!isAdmin) return;
+  const id = e.currentTarget.dataset.id;
+  const ds = e.currentTarget.dataset.date;
+  const monthIdx = Number(e.currentTarget.dataset.monthidx);
+  const row = allRows.find(d=>d.id===id);
+  if (!row) return;
+
+  let dates = [...getDates(row)];
+  if (dates.includes(ds)) dates = dates.filter(x=>x!==ds);
+  else dates.push(ds);
+
+  const months = Array.isArray(row.months) ? [...row.months] : JSON.parse(row.months || "[]");
+  const full = months.length ? months : Array(12).fill(false);
+  full[monthIdx] = dates.some(d=>d.startsWith(`${selectedYear}-${String(monthIdx+1).padStart(2,"0")}`));
+
+  const { error } = await supa.from("schedule")
+    .update({ scheduled_dates: dates, months: full, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) setStatus("Gagal menyimpan: " + error.message, true);
+  else await loadSchedule();
+}
+
+async function onDeleteRow(e){
+  const btn = e.currentTarget;
+  const id = btn.dataset.id;
+  if (btn.dataset.armed !== "1"){
+    btn.dataset.armed = "1"; btn.innerHTML = '<i class="bi bi-question-circle"></i>';
+    setTimeout(()=>{ btn.dataset.armed="0"; btn.innerHTML='<i class="bi bi-trash3"></i>'; }, 3000);
+    return;
+  }
+  const { error } = await supa.from("schedule").delete().eq("id", id);
+  if (error) setStatus("Gagal menghapus: " + error.message, true);
+  else await loadSchedule();
+}
+
+$("#yearSelect").addEventListener("change", e=>{ selectedYear = Number(e.target.value); renderRows(); });
+$("#plantSelect").addEventListener("change", e=>{ selectedPlant = e.target.value; renderRows(); });
+$("#sectionSelect").addEventListener("change", e=>{ selectedSection = e.target.value; renderRows(); });
+$("#bulanSelect").addEventListener("change", e=>{ selectedBulan = e.target.value; buildHeader(); renderRows(); });
+$("#btnAddYear").addEventListener("click", ()=>{
+  const v = Number($("#newYearInput").value);
+  if (!v || v<2000 || v>2100){ setStatus("Masukkan tahun yang valid.", true); return; }
+  selectedYear = v; $("#newYearInput").value = ""; renderAll();
+});
+$("#btnAddRow").addEventListener("click", async ()=>{
+  const nextNo = allRows.filter(d=>Number(d.year)===Number(selectedYear)).length + 1;
+  const { error } = await supa.from("schedule").insert(emptyRow(selectedYear, nextNo));
+  if (error) setStatus("Gagal menambah baris: " + error.message, true);
+  else await loadSchedule();
+});
+
+$("#btnTemplate").addEventListener("click", ()=>{
+  const cols = yearAllDaysColumns(selectedYear);
+  const nFixed = COLS.length;
+
+  // 3 header rows (Bulan, Tanggal, Hari) + 1 example data row
+  const rowMonth = new Array(nFixed + cols.length).fill("");
+  const rowDate  = new Array(nFixed + cols.length).fill("");
+  const rowDay   = new Array(nFixed + cols.length).fill("");
+  COLS.forEach((c,i)=> rowMonth[i] = COL_LABELS[c]); // fixed-column headers live in row 0 (merged down via !merges)
+
+  cols.forEach((c,i)=>{
+    const ci = nFixed + i;
+    rowDate[ci] = c.date;
+    rowDay[ci] = DAY_ABBR[c.dow];
+  });
+
+  const exampleDates = new Set([ dateStr(selectedYear,0,5), dateStr(selectedYear,0,12), dateStr(selectedYear,0,19) ]);
+  const example = new Array(nFixed + cols.length).fill("");
+  example[0]=1; example[1]="FL-0001"; example[2]="Keandalan"; example[3]="Pompa Air 01 (P-101)";
+  example[4]="WC-01"; example[5]="Budi"; example[6]="Pabrik 1"; example[7]="MP-0001"; example[8]="1";
+  example[9]="Lubrikasi bearing & cek vibrasi"; example[10]="Mingguan"; example[11]="B";
+  cols.forEach((c,i)=>{
+    const ds = dateStr(selectedYear, c.month, c.date);
+    if (exampleDates.has(ds)) example[nFixed+i] = "V";
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([rowMonth, rowDate, rowDay, example]);
+  const merges = [];
+  // fixed-column headers span all 3 header rows
+  for (let c=0;c<nFixed;c++) merges.push({ s:{r:0,c}, e:{r:2,c} });
+
+  // month-group merges (row 0), over the date columns
+  let i = 0;
+  while (i < cols.length){
+    let j = i;
+    while (j < cols.length && cols[j].month === cols[i].month) j++;
+    const c0 = nFixed+i, c1 = nFixed+j-1;
+    rowMonth[c0] = MONTH_NAMES_FULL[cols[i].month];
+    if (c1 > c0) merges.push({ s:{r:0,c:c0}, e:{r:0,c:c1} });
+    i = j;
+  }
+  XLSX.utils.sheet_add_aoa(ws, [rowMonth], { origin: "A1" });
+  ws["!merges"] = merges;
+  ws["!cols"] = [...COLS.map(()=>({wch:16})), ...cols.map(()=>({wch:4}))];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, String(selectedYear));
+  const out = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+  downloadBlob(`Template_Jadwal_PM_${selectedYear}.xlsx`, new Blob([out], {type:"application/octet-stream"}));
+});
+
+let pendingUploadRows = null;
+async function runImport(rows){
+  // Format baru: baris 0=Bulan(merge), 1=Tanggal, 2=Hari, 3+=data
+  const nFixed = COLS.length;
+  const monthRow = rows[0] || [];
+  const dateRow = rows[1] || [];
+
+  const monthForCol = {};
+  let currentMonth = null;
+  const maxCol = Math.max(monthRow.length, dateRow.length);
+  for (let c = nFixed; c < maxCol; c++){
+    const v = String(monthRow[c] ?? "").trim().toUpperCase();
+    if (v) currentMonth = MONTH_NAMES_FULL.indexOf(v);
+    monthForCol[c] = currentMonth;
+  }
+
+  const existing = allRows.filter(d=>Number(d.year)===Number(selectedYear));
+  if (existing.length){
+    const ids = existing.map(d=>d.id);
+    await supa.from("schedule").delete().in("id", ids);
+  }
+
+  let count = 0;
+  const toInsert = [];
+  for (let r = 3; r < rows.length; r++){
+    const row = rows[r];
+    if (!row || row.every(c=>String(c).trim()==="")) continue;
+
+    const scheduledDates = [];
+    for (let c = nFixed; c < row.length; c++){
+      if (!truthyMonth(row[c])) continue;
+      const mIdx = monthForCol[c];
+      const dayNum = Number(dateRow[c]);
+      if (mIdx==null || mIdx<0 || !dayNum) continue;
+      scheduledDates.push(dateStr(selectedYear, mIdx, dayNum));
+    }
+    const monthsArr = Array(12).fill(false);
+    scheduledDates.forEach(ds=>{ monthsArr[Number(ds.split("-")[1])-1] = true; });
+
+    const data = { year: Number(selectedYear), months: monthsArr, scheduled_dates: scheduledDates };
+    COLS.forEach((c,i)=>{
+      data[c] = c==="no" ? (Number(row[i]) || (count+1)) : String(row[i]||"");
+    });
+
+    toInsert.push(data);
+    count++;
+  }
+  if (toInsert.length){
+    const { error } = await supa.from("schedule").insert(toInsert);
+    if (error){ setStatus("Gagal mengimpor: " + error.message, true); return; }
+  }
+  setStatus(`Berhasil impor ${count} baris untuk tahun ${selectedYear}.`);
+  await loadSchedule();
+}
+function hideConfirmBanner(){ $("#confirmBanner").classList.add("hidden"); pendingUploadRows = null; }
+$("#confirmYes").addEventListener("click", async ()=>{
+  const rows = pendingUploadRows; hideConfirmBanner();
+  if (!rows) return;
+  setStatus("Mengimpor data...");
+  await runImport(rows);
+});
+$("#confirmNo").addEventListener("click", ()=>{ hideConfirmBanner(); setStatus("Upload dibatalkan."); });
+
+$("#fileUpload").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  setStatus("Membaca file...");
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:"array"});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+    if (rows.length < 4){ setStatus("Format file tidak sesuai template (minimal 3 baris header + 1 baris data).", true); return; }
+    const existing = allRows.filter(d=>Number(d.year)===Number(selectedYear));
+    if (existing.length > 0){
+      pendingUploadRows = rows;
+      $("#confirmMsg").textContent = `Ada ${existing.length} baris data tahun ${selectedYear} yang sudah ada. Timpa dengan isi file ini?`;
+      $("#confirmBanner").classList.remove("hidden");
+      setStatus("");
+    } else {
+      await runImport(rows);
+    }
+  }catch(err){ setStatus("Gagal membaca file: " + (err.message||err), true); }
+  e.target.value = "";
+});
+
+function currentFilteredRowsSorted(){
+  let rows = allRows.filter(d=>Number(d.year)===Number(selectedYear));
+  if (selectedPlant !== "Semua") rows = rows.filter(d=>(d.plant||"")===selectedPlant);
+  if (selectedSection !== "Semua") rows = rows.filter(d=>(d.section||"")===selectedSection);
+  return rows.sort((a,b)=>(Number(a.no)||0)-(Number(b.no)||0));
+}
+function exportFileSuffix(){
+  let suf = String(selectedYear);
+  if (selectedPlant !== "Semua") suf += `_${selectedPlant}`;
+  if (selectedSection !== "Semua") suf += `_${selectedSection}`;
+  if (selectedBulan !== "Semua") suf += `_${MONTHS[Number(selectedBulan)]}`;
+  return suf.replace(/\s+/g,"");
+}
+function exportColumns(){
+  // returns {labels:[...], getValue(row, col)}
+  if (selectedBulan === "Semua"){
+    return {
+      labels: MONTHS,
+      getValue: (row, i) => {
+        const months = Array.isArray(row.months) ? row.months : JSON.parse(row.months||"[]");
+        const full = months.length ? months : Array(12).fill(false);
+        return full[i] ? "V" : "";
+      }
+    };
+  }
+  const monthIdx = Number(selectedBulan);
+  const nDays = daysInMonth(selectedYear, monthIdx);
+  const labels = Array.from({length:nDays}, (_,i)=>String(i+1));
+  return {
+    labels,
+    getValue: (row, i) => {
+      const ds = dateStr(selectedYear, monthIdx, i+1);
+      return getDates(row).includes(ds) ? "V" : "";
+    }
+  };
+}
+
+$("#btnExportXlsx").addEventListener("click", ()=>{
+  const rows = currentFilteredRowsSorted();
+  const cols = exportColumns();
+  const header = [...COLS.map(c=>COL_LABELS[c]), ...cols.labels];
+  const data = rows.map(d=>[...COLS.map(c=>d[c]||""), ...cols.labels.map((_,i)=>cols.getValue(d,i))]);
+  const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, String(selectedYear));
+  const out = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+  downloadBlob(`Jadwal_PM_${exportFileSuffix()}.xlsx`, new Blob([out], {type:"application/octet-stream"}));
+});
+// Reasonable minimum widths (pt) per fixed column, so text wraps onto 2-3 lines
+// instead of collapsing letter-by-letter. Columns not listed get autoTable's default.
+const FIXED_COL_MIN_WIDTH = {
+  no: 14,
+  functional_location: 58,
+  section: 42,
+  equipment: 48,
+  main_work_centre: 42,
+  eksekutor: 36,
+  plant: 32,
+  no_maintenance_plan: 42,
+  no_maintenance_item: 32,
+  desc_maintenance_plan_text: 80,
+  interval_cycle: 38,
+  abc_indicator: 28,
+};
+
+$("#btnExportPdf").addEventListener("click", ()=>{
+  const rows = currentFilteredRowsSorted();
+  const cols = exportColumns();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:"landscape", unit:"pt", format:"a4" });
+  doc.setFontSize(13);
+  let title = `Jadwal Preventive Maintenance Tahun ${selectedYear}`;
+  if (selectedPlant !== "Semua") title += ` — ${selectedPlant}`;
+  if (selectedSection !== "Semua") title += ` — ${selectedSection}`;
+  if (selectedBulan !== "Semua") title += ` — ${MONTHS[Number(selectedBulan)]}`;
+  doc.text(title, 28, 28);
+  const head = [[...COLS.map(c=>COL_LABELS[c]), ...cols.labels]];
+  const body = rows.map(d=>[...COLS.map(c=>d[c]||""), ...cols.labels.map((_,i)=>cols.getValue(d,i))]);
+
+  const columnStyles = {};
+  COLS.forEach((c,i)=>{ columnStyles[i] = { cellWidth: FIXED_COL_MIN_WIDTH[c] || 50 }; });
+  cols.labels.forEach((_,i)=>{
+    columnStyles[COLS.length+i] = { cellWidth: selectedBulan==="Semua" ? 18 : 9.5, halign:"center" };
+  });
+
+  doc.autoTable({
+    head, body, startY:40,
+    styles:{ fontSize:6, cellPadding:2, overflow:"linebreak", valign:"middle" },
+    headStyles:{ fillColor:[11,36,54], halign:"center", fontSize:6 },
+    columnStyles,
+    margin:{ left:12, right:12 },
+  });
+  downloadBlob(`Jadwal_PM_${exportFileSuffix()}.pdf`, doc.output("blob"));
+});
+</script>
+</body>
+</html>
